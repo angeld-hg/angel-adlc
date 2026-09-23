@@ -1,0 +1,20 @@
+{
+  "name": "angel-marketplace",
+  "owner": {
+    "name": "Angel Difo",
+    "email": "angel.difo@hgcapital.com"
+  },
+  "metadata": {
+    "description": "Personal marketplace for Angel's ADLC plugin",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "angel",
+      "source": "./plugins/angel",
+      "description": "Elephant/Goldfish ADLC: an orchestrator chat plus fresh-context subagents for spec, plan, implement, review and ship.",
+      "version": "0.2.0",
+      "category": "development"
+    }
+  ]
+}
