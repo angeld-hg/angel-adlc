@@ -5,6 +5,54 @@ Each entry answers: what did we decide, why, and what would make us change it.
 
 ---
 
+## 2026-09-24: v0.3.0, fixes from the gantt-chart-manager retro
+
+First real feature through angel (hg-gaant-chart PR #1: 13 slices, 19 decisions, 3 verification
+runs). The retro (`.adlc/gantt-chart-manager/retro.md` in that repo) found 10 friction points; the
+user approved seven plugin edits, E1-E7. The verification-profile edit (E8) was local to that repo,
+and the guardrail false positives belong to another plugin.
+
+- **E1 planner: small slices, isolated e2e (F2, F3).** One new e2e spec per slice, quality-gate work
+  split per spec. If two parallel slices both run e2e, the scaffold slice makes ports, DB path and
+  output dir env-configurable. S13 had bundled three specs and stalled twice; parallel UI slices
+  would have collided on ports.
+- **E2 implementer: time-box, fix the class (F2, F6).** Every command is time-boxed (the watchdog
+  kills a goldfish silent for 10 min). A review fix lists every sibling call site. CR7 was CR1's
+  sibling and cost a whole extra review/verify round.
+- **E3 implement skill: environment facts, e2e cap, stalls (F2, F3, F4).** "Nothing more" was
+  relaxed: the elephant may pass per-slice environment facts (ports, DB path, which slices run
+  alongside), never summaries. At most 2 e2e-running slices at once (load 26-45 flaked timing
+  tests). A stalled slice is resumed once, then split.
+- **E4 start: no duplicate goldfish (F1).** Check ListAgents before re-dispatching; plans take
+  15-20 min. The elephant restarted a planner that was still working.
+- **E5 reviewers save their own reports (F5).** The elephant was retyping ~8 reports of several
+  thousand tokens each into `reviews/`. code-reviewer, drift-checker, spec-reviewer and verifier now
+  have Write, the skills pass them a report path, and they return `Report: <path>`, <= 5 summary
+  lines, `## Decisions needed` and the verdict.
+  - **Enforcement:** new `reviewer-write-guard` PreToolUse hook, not an extension of
+    elephant-guard (which is about the main session and is off outside opted-in repos). It keys
+    on `agent_type`, which the v0.1.0 spike showed PreToolUse carries for subagent calls. It allows
+    `.adlc/<slug>/reviews/<name>.md` in an existing feature folder (plus `evidence/` for the
+    verifier, whose instructions already put throwaway scripts there) and denies everything else,
+    in every repo. `..` segments are refused outright.
+  - **Decisions stay in the final message.** The approved wording was "verdict line plus 5 lines",
+    but `decide` and goldfish-gate need the `## Decisions needed` section, so it's copied over
+    (usually "None."), as the planner already does.
+  - **goldfish-gate** now checks that a `Report:` file exists, and for the verifier checks
+    `## Evidence` and `VERDICT:` in that file, since the ship-gate reads it.
+  - **Limitation:** writes through Bash (`tee`, `>`) are invisible to the hook, as with
+    elephant-guard. Three of the four agents keep Bash for read-only commands; only their
+    instructions stop them.
+- **E6 discover: is `.adlc/` tracked? (F7).** `.adlc` was gitignored before S1 and the spec trail
+  nearly didn't ship. Discover now checks `git check-ignore` and asks.
+- **E7 ship: gh login check (F8).** `gh api user --jq .login` instead of `gh auth status`, which the
+  HG guardrails plugin blocks.
+
+Not done: the code-reviewer asking for the sibling list (part of F6's proposal, not in E2), and a
+verify-alone rule for the verify skill (F4, left to the repo's verification profile).
+
+---
+
 ## 2026-09-23: v0.2.0, decisions, verification and anti-patterns
 
 Angel asked for four changes after reviewing v0.1.0.

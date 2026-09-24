@@ -34,12 +34,15 @@ Requires `bash`, `jq`, `just`, and `gh` (for check-pr/ship).
     - utilities: `check-pr`, `doc-audit`, `make-claude-md`, `retro`
   - `agents/*.md`: goldfish definitions.
     - writers: `spec-writer`, `planner`, `implementer`, `repo-scout`
-    - read-only (no Write/Edit): `spec-reviewer`, `drift-checker`, `code-reviewer`, `doc-auditor`,
-      `verifier`
+    - report writers (Write, no Edit; may write only their own report under
+      `.adlc/<slug>/reviews/`, plus `evidence/` for the verifier, enforced by
+      `reviewer-write-guard`): `spec-reviewer`, `drift-checker`, `code-reviewer`, `verifier`
+    - read-only (no Write/Edit): `doc-auditor`
   - `hooks/hooks.json` plus `hooks/*.sh`. All of them source `hooks/lib.sh`; the rule hooks also
     source `hooks/rules-lib.sh`.
     - SessionStart: `session-start` (elephant memory)
-    - PreToolUse: `elephant-guard` and `antipattern-guard` (on Edit/Write), `ship-gate` (on Bash)
+    - PreToolUse: `elephant-guard`, `reviewer-write-guard` and `antipattern-guard` (on Edit/Write),
+      `ship-gate` (on Bash)
     - SubagentStop: `goldfish-gate`
     - Stop: `decision-gate`, `retro-nudge`
   - `scripts/`:
@@ -54,9 +57,13 @@ Requires `bash`, `jq`, `just`, and `gh` (for check-pr/ship).
 - **Hooks fail open.** A missing `jq` or bad input means exit 0, never a broken session. Every output
   goes through the `angel_*` emitters in `hooks/lib.sh`.
 - **Hooks are silent outside opted-in repos.** A target repo opts in by having a `.adlc/` directory.
-  One exception: the goldfish-gate's report checks (a `## Decisions needed` section and a `VERDICT:`
-  line) apply to angel's reviewer agents everywhere. They only ever affect those agents, and
-  `/angel:check-pr` and `/angel:doc-audit` gate on them even in repos without `.adlc/`.
+  Two exceptions, both limited to angel's reviewer agents: the goldfish-gate's report checks (a
+  `## Decisions needed` section and a `VERDICT:` line), because `/angel:check-pr` and
+  `/angel:doc-audit` gate on them even in repos without `.adlc/`; and `reviewer-write-guard`, because
+  those agents never change the work they judge, anywhere.
+- **Reviewers save their own reports.** The elephant passes a report path under
+  `.adlc/<slug>/reviews/`; the goldfish writes the full report there and returns a `Report: <path>`
+  line, a summary of 5 lines or fewer, its `## Decisions needed` and the `VERDICT:` line.
 - **Every hook behavior has a fixture test.** Add the test first (`tests/hooks/test_<hook>.sh`, built
   on `new_project` and `with_feature` from `tests/helpers.sh`), watch it fail, then change the hook.
   `run_hook` runs hooks from the project root, like Claude Code does. Keep it that way, because

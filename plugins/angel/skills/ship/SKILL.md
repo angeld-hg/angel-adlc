@@ -17,7 +17,8 @@ Input: `$ARGUMENTS`: a slug (or empty for `.adlc/ACTIVE`), optionally `--draft`.
 - state.md shows review passed (`phase: ship`) and a `/angel:check-pr` run said GO. If check-pr
   hasn't run since the last commit, run it now in pre-push mode.
 - Not on `main`. Working tree clean (`git status --porcelain` is empty).
-- `gh auth status` succeeds.
+- gh is authenticated: `gh api user --jq .login` prints a login. Prefer this over `gh auth status`,
+  which some guardrail hooks block.
 
 ## 2. Build the PR description
 

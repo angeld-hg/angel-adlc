@@ -24,7 +24,13 @@ Record the schedule in state.md's `next:` field ("wave 1: S1+S2, wave 2: S3").
 
 Send **one message with one Agent call per slice** so they run concurrently. Each gets:
 - `subagent_type: angel:implementer`
-- the feature folder path and the slice id. Nothing more: it reads its slice from plan.md.
+- the feature folder path and the slice id. It reads its slice from plan.md. Also pass
+  per-slice environment facts it can't know: which ports or DB path to use for e2e so that
+  parallel slices don't collide, and which other slices are running. Never pass summaries of the
+  spec or plan.
+
+Run at most 2 slices that execute e2e at the same time; load makes timing-based tests flaky. If a
+wave has more, split it.
 
 ## 3. Check the work (don't trust, check)
 
@@ -43,7 +49,14 @@ When the wave returns, for each report:
 Log each slice in state.md ("S1 DONE, 4 tests, evidence: curl 200"). Commit per wave with a message
 naming the slices, unless the user prefers otherwise.
 
-## 4. Next wave, then gate
+## 4. Stalls
+
+If an implementer is killed by the watchdog, check `git status` for partial work and leftover
+processes (stop any server or test runner it left behind), then resume the same agent once with
+SendMessage. If it stalls again, split the slice into smaller parts with disjoint files and dispatch
+fresh agents. Record the split in state.md.
+
+## 5. Next wave, then gate
 
 Repeat until every slice is DONE. Then tell the user: slices done, tests added, anything deviating
 from the plan. Ask: continue to verification / stop.

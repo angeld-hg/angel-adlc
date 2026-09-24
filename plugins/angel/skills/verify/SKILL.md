@@ -15,11 +15,16 @@ Input: `$ARGUMENTS` (a slug, or empty for `.adlc/ACTIVE`)
 
 ## 1. Dispatch the verifier
 
-Dispatch `angel:verifier` with the feature folder path. On a re-run, also pass the previous report
-path. Don't tell it what the implementers said worked; its independence is the point.
+On a re-run, first move the old report to `.adlc/<slug>/reviews/verification-<n>.md`, so the
+ship-gate always reads the latest.
 
-Save its report to `.adlc/<slug>/reviews/verification.md`. On a re-run, move the old one to
-`verification-<n>.md` first, so the ship-gate always reads the latest.
+Dispatch `angel:verifier` with the feature folder path and the report path
+`.adlc/<slug>/reviews/verification.md`. On a re-run, also pass the previous report's (moved) path.
+Don't tell it what the implementers said worked; its independence is the point.
+
+The verifier saves its own full report there and returns only a `Report:` line, a short summary,
+its Decisions needed and the verdict. Don't copy the report yourself. Confirm the file exists and
+ends with the same `VERDICT:`; the ship-gate reads that file.
 
 ## 2. Act on the verdict
 

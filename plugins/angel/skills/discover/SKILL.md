@@ -17,6 +17,12 @@ ask the user: keep / refresh. Keep is the default when it's less than 30 days ol
 
 Create `.adlc/` if it doesn't exist. This opts the repo into angel's hooks, so tell the user.
 
+Check `git check-ignore -q .adlc/ACTIVE`. If `.adlc/` is ignored, ask the user with AskUserQuestion
+whether to commit the ADLC artifacts (recommended: yes, so the spec, decisions and evidence travel
+with the PR) or keep them local. On "commit", `git check-ignore -v .adlc/ACTIVE` names the rule that
+matches. Have an implementer remove it (elephant-guard won't let you edit it yourself), or, if it
+comes from a global gitignore, note in state.md that the artifacts need `git add -f`.
+
 ## 2. Probe (deterministic)
 
 Run:

@@ -33,6 +33,12 @@ your lane.
 6. If you hit a design fork the plan doesn't settle, don't pick one. Report `BLOCKED` with the
    options. The elephant takes it to the user.
 7. Don't commit. The elephant decides how commits are grouped.
+8. **Time-box every command you run.** Use `timeout` where it exists, a polling loop where the OS
+   has none, and pass `--timeout` / `--global-timeout` to Playwright. A goldfish that sits silent
+   for 10 minutes gets killed by the watchdog and loses its work.
+9. **When you fix a review finding, fix the class, not the instance.** List every sibling call
+   site with the same flaw and fix it, or say why it's exempt. Put that list in your report. A
+   sibling in a file you don't own is a blocker (rule 1), not an exemption.
 
 ## Done means
 
@@ -49,6 +55,7 @@ your lane.
 - Tests added: <test names> - failed first: yes/no
 - Test command: `<cmd>` -> <pass/fail counts>
 - Evidence recipe: `<cmd>` -> <key output lines>
+- Sibling call sites (review findings only): <each `path:line` - fixed | exempt because ...>
 - Deviations from plan: <none, or what and why>
 - Blockers: <none, or what you need>
 ```

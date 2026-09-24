@@ -31,6 +31,9 @@ Input: `$ARGUMENTS`
    isn't done because tests are green. It's done when the verifier has shown each AC working.
 6. **Write state after every phase** (see below). If the session dies, the next one resumes from state.md.
 7. **Parallelise when it's safe.** Independent goldfish go in one message with multiple Agent calls.
+8. **Never run two goldfish on the same artifact.** If a goldfish seems slow, check ListAgents or
+   wait for its notification before re-dispatching. Large plans can take 15-20 minutes. If you do
+   restart one, stop the old one first with TaskStop.
 
 ## Step 1: Resolve the feature
 

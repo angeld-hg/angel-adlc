@@ -9,11 +9,11 @@ feature from idea to PR by sending each bounded job to a fresh-context subagent 
 ```
 You ⇄ ELEPHANT (/angel:start)       owns .adlc/<slug>/state.md, asks you every lasting choice
         ├─► repo-scout    → .adlc/verification.md       (first run: how is anything proven here?)
-        ├─► spec-writer   → spec.md → spec-reviewer     (read-only)
-        ├─► planner       → plan.md → drift-checker     (read-only, plan vs spec)
+        ├─► spec-writer   → spec.md → spec-reviewer     (report only)
+        ├─► planner       → plan.md → drift-checker     (report only, plan vs spec)
         ├─► implementer ×N                              one per slice, parallel when files don't overlap
-        ├─► verifier      → evidence per AC             (read-only; ship-gate needs VERIFIED)
-        ├─► code-reviewer ∥ drift-checker               (read-only, diff vs spec + plan)
+        ├─► verifier      → evidence per AC             (report only; ship-gate needs VERIFIED)
+        ├─► code-reviewer ∥ drift-checker               (report only, diff vs spec + plan)
         └─► ship → PR (you merge)
 
    any "Decisions needed" from any goldfish ─► /angel:decide ─► choice boxes ─► decisions.md
@@ -54,12 +54,14 @@ In a new repo, run `/angel:discover` (or just `/angel:start`, which runs it firs
 
 ## Hooks
 
-All are silent unless the repo has a `.adlc/` folder (created by `/angel:start` or `/angel:discover`).
+All are silent unless the repo has a `.adlc/` folder (created by `/angel:start` or `/angel:discover`),
+except the reviewer checks in goldfish-gate and reviewer-write-guard, which only affect angel's reviewer agents.
 
 | Hook | Event | What you'll see |
 |---|---|---|
 | session-start | SessionStart | A new session knows the active feature, phase, next step, pending decisions, banned patterns and whether a verification profile exists |
 | elephant-guard | PreToolUse (Edit/Write) | The main chat is denied edits outside `.adlc/` and told to delegate to `implementer` |
+| reviewer-write-guard | PreToolUse (Edit/Write) | spec-reviewer, drift-checker, code-reviewer and verifier can write only their own report in `.adlc/<slug>/reviews/` (the verifier also `evidence/`). Applies in every repo. |
 | antipattern-guard | PreToolUse (Edit/Write) | **Any** agent adding a banned pattern is refused and told why and what to use instead. Existing occurrences don't block unrelated edits. |
 | ship-gate | PreToolUse (Bash) | `gh pr create` is denied until the feature's verification says `VERIFIED`, or you've waived it |
 | goldfish-gate | SubagentStop | A goldfish is sent back if its deliverable is missing: spec, plan or profile file; the `## Decisions needed` section; evidence; or a `VERDICT:` line |

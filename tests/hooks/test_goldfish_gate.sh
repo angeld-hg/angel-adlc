@@ -56,6 +56,29 @@ assert_contains "verifier without an Evidence section is sent back" \
 assert_empty "verifier with evidence, decisions and verdict finishes" \
   "$(gate angel:verifier $'## Evidence\n### AC1\n- ok\n## Decisions needed\nNone.\nVERDICT: VERIFIED')"
 
+# --- reports saved by the goldfish itself ("Report: <path>" in the final message)
+short=$'Report: .adlc/add-export/reviews/code-review.md\n2 major, 1 minor.\n\n## Decisions needed\nNone.\n\nVERDICT: CHANGES_REQUESTED'
+assert_contains "a named report file that doesn't exist is sent back" \
+  "$(gate angel:code-reviewer "$short")" "code-review.md"
+mkdir -p "$p/.adlc/add-export/reviews"
+printf '## Code review\n### Major\n- a\n\n## Decisions needed\nNone.\n\nVERDICT: CHANGES_REQUESTED\n' \
+  >"$p/.adlc/add-export/reviews/code-review.md"
+assert_empty "short final message + saved report lets the reviewer finish" "$(gate angel:code-reviewer "$short")"
+assert_empty "bold, backticked absolute report paths are understood" \
+  "$(gate angel:drift-checker "**Report:** \`$p/.adlc/add-export/reviews/code-review.md\`"$'\n## Decisions needed\nNone.\nVERDICT: PROCEED')"
+assert_contains "a saved report doesn't excuse a missing verdict in the final message" \
+  "$(gate angel:code-reviewer $'Report: .adlc/add-export/reviews/code-review.md\n## Decisions needed\nNone.')" "VERDICT"
+
+vshort=$'Report: .adlc/add-export/reviews/verification.md\n5/5 ACs verified.\n## Decisions needed\nNone.\nVERDICT: VERIFIED'
+printf '## Verification\n## Summary\n5/5\nVERDICT: VERIFIED\n' >"$p/.adlc/add-export/reviews/verification.md"
+assert_contains "verifier's saved report must have the Evidence section" \
+  "$(gate angel:verifier "$vshort")" "Evidence"
+printf '## Verification\n## Evidence\n### AC1\n- ok\n## Decisions needed\nNone.\n' >"$p/.adlc/add-export/reviews/verification.md"
+assert_contains "verifier's saved report must carry the VERDICT line (the ship-gate reads it)" \
+  "$(gate angel:verifier "$vshort")" "VERDICT"
+printf 'VERDICT: VERIFIED\n' >>"$p/.adlc/add-export/reviews/verification.md"
+assert_empty "verifier with a complete saved report and a short message finishes" "$(gate angel:verifier "$vshort")"
+
 assert_empty "unrelated agents are ignored" "$(gate general-purpose)"
 
 rm -rf "$p"
