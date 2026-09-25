@@ -25,9 +25,11 @@ planner again with the decisions.md path before the audit.
 
 ## 2. Divergence audit (fresh context)
 
-Dispatch `angel:drift-checker` with the feature folder path and `mode: plan`. **Do not summarise the
-spec or plan for it.** It must read both cold; that independence is the whole value of the check.
-Save its report to `.adlc/<slug>/reviews/plan-drift.md`.
+Dispatch `angel:drift-checker` with the feature folder path, `mode: plan` and the report path
+`.adlc/<slug>/reviews/plan-drift.md` (on a re-run, `plan-drift-2.md`, and so on). **Do not
+summarise the spec or plan for it.** It must read both cold; that independence is the whole value of
+the check. It saves its own report there and returns only a `Report:` line, a short summary, its
+Decisions needed and the verdict. Don't copy the report yourself; confirm the file exists.
 
 - `REVISE`: dispatch planner once with the drift report path, then re-run drift-checker.
 - `ESCALATE`: follow `angel:decide` on the report's Decisions needed. The answers may send you back
@@ -36,7 +38,9 @@ Save its report to `.adlc/<slug>/reviews/plan-drift.md`.
 
 ## 3. Gate
 
-Tell the user: the approach in one line, the slices (id + name + parallel? + how each will be
-proven), AC coverage, the decisions made, and the top risk. Ask: approve / revise / stop.
+Post the **Plan ready** digest from `angel:start` ("How to talk to the user"): one line per work item
+from the plan's plain-words table (name + what it does + what it runs alongside), how it will be
+proven, the top risk, and what you need from the user. 10 lines or fewer, names not labels. Ask:
+approve / revise / stop.
 
 On approval, update state.md: `phase: implement`, `next: run /angel:implement`, plus a decision-log line.

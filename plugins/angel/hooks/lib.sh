@@ -79,6 +79,20 @@ angel_physical_path() {
   fi
 }
 
+# angel_id_labels <text> -> comma-separated id-style labels found in the text (S1, D12, AC3,
+# CR7, E2, F8), or nothing. Labels like these are unreadable to the human steering the work
+# ("what is D12?"), so goldfish must use short descriptive names instead. Text inside
+# backticks and fenced code blocks is ignored, so real names such as `S3` can be quoted,
+# and E2E / P95 don't match.
+angel_id_labels() {
+  printf '%s\n' "$1" \
+    | awk '/^[[:space:]]*```/ { fence = !fence; next } !fence' \
+    | sed 's/`[^`]*`//g' \
+    | grep -oE '(^|[^A-Za-z0-9_./-])(AC|CR|S|D|E|F)[0-9]{1,3}([^A-Za-z0-9_]|$)' \
+    | grep -oE '(AC|CR|S|D|E|F)[0-9]{1,3}' \
+    | awk '!seen[$0]++' | head -n 8 | paste -sd, - | sed 's/,/, /g'
+}
+
 # --- Output helpers. Each one prints the JSON Claude Code expects and exits. ---
 
 angel_allow() {

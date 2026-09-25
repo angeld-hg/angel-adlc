@@ -24,6 +24,12 @@ Run these in parallel (one message):
 - **`angel:code-reviewer`:** base branch (default `main`) and the feature folder, if there's an active one.
 - **`angel:drift-checker`:** only if there's an active feature: folder path, `mode: diff`, base branch.
 
+With an active feature, also give each reviewer a report path:
+`.adlc/<slug>/reviews/check-pr-code-review.md` and `.adlc/<slug>/reviews/check-pr-drift.md` (add a
+`-2`, `-3` suffix if they exist). They save their own reports there and return only a `Report:`
+line, a short summary, Decisions needed and the verdict; fill the table from that and don't copy the
+reports yourself. Without an active feature, pass no path: the reviewer returns its full report.
+
 Also check these yourself (read-only):
 - **Verification:** with an active feature, `reviews/verification.md` must exist, say
   `VERDICT: VERIFIED` (or state.md has `verification: waived`), and be newer than the last commit
@@ -46,9 +52,9 @@ Output:
 | Lint | ... |
 | Code review | APPROVE / CHANGES_REQUESTED (<n> critical) |
 | Drift | PROCEED / REVISE / n/a |
-| Verification | VERIFIED (n/m ACs) / waived / STALE / MISSING / n/a |
+| Verification | VERIFIED (n/m criteria) / waived / STALE / MISSING / n/a |
 | Anti-patterns | clean / <n> new violations / no rules |
-| Open decisions | none / D2, D5 pending |
+| Open decisions | none / `export-feature-flag`, `excel-support` pending |
 | Hygiene | ok / <issues> |
 
 GO | NO-GO: <the one thing to fix first>

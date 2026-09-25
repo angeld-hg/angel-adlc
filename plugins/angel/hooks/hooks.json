@@ -1,5 +1,5 @@
 {
-  "description": "angel: elephant memory (SessionStart); elephant guard, anti-pattern guard, ship gate (PreToolUse); goldfish gate (SubagentStop); decision gate, retro nudge (Stop)",
+  "description": "angel: elephant memory (SessionStart); elephant guard, reviewer write guard, anti-pattern guard, ship gate (PreToolUse); goldfish gate (SubagentStop); decision gate, retro nudge (Stop)",
   "hooks": {
     "SessionStart": [
       {
@@ -19,6 +19,11 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/elephant-guard.sh\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/reviewer-write-guard.sh\"",
             "timeout": 10
           },
           {

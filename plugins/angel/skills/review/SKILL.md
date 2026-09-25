@@ -12,18 +12,23 @@ Precondition: the branch has commits or changes relative to the base. Check with
 
 ## 1. Dispatch both reviewers at once
 
-In **one message**, send two Agent calls:
-- `angel:code-reviewer`: base branch + feature folder path + the path `${CLAUDE_PLUGIN_ROOT}/scripts/check-antipatterns.sh` (if `.adlc/rules/` exists).
-- `angel:drift-checker`: feature folder path + `mode: diff` + base branch.
+Pick the report paths first: `.adlc/<slug>/reviews/code-review.md` and
+`.adlc/<slug>/reviews/diff-drift.md` (if a previous round exists, add a `-2`, `-3` suffix rather than
+overwriting). Then, in **one message**, send two Agent calls:
+- `angel:code-reviewer`: base branch + feature folder path + its report path + the path `${CLAUDE_PLUGIN_ROOT}/scripts/check-antipatterns.sh` (if `.adlc/rules/` exists).
+- `angel:drift-checker`: feature folder path + `mode: diff` + base branch + its report path.
 
-Both are read-only, and neither sees the other's output. That independence is deliberate.
+Neither edits code, and neither sees the other's output. That independence is deliberate.
 
-Save the reports to `.adlc/<slug>/reviews/code-review.md` and `.adlc/<slug>/reviews/diff-drift.md`
-(if a previous round exists, add a `-2`, `-3` suffix rather than overwriting).
+Each one saves its own full report to the path you gave it and returns only a `Report:` line, a
+short summary, its Decisions needed and the verdict. Don't copy reports into files yourself. Confirm
+both files exist.
 
 ## 2. Triage: fixes, decisions, rule candidates
 
-Merge the findings into one list, ordered Critical/high first, and sort each one:
+The final messages give you the verdicts, finding counts and decisions. If either reports any
+findings, read just the findings lists in the saved reports, merge them into one list, ordered
+Critical/high first, and sort each one:
 - **Fix** (one right answer): route it to an implementer (step 3).
 - **Decision** (anything under a report's `## Decisions needed`, or a finding where you see more
   than one defensible answer): follow `angel:decide`. The user chooses via choice boxes, and the
@@ -35,8 +40,8 @@ Merge the findings into one list, ordered Critical/high first, and sort each one
 
 ## 3. Fix loop
 
-For each fix, dispatch `angel:implementer` with the feature folder, the report path, and the finding
-id or `path:line`. Independent fixes in different files can go in parallel. Check the work as in
+For each fix, dispatch `angel:implementer` with the feature folder, the report path, and the finding's
+name and `path:line`. Independent fixes in different files can go in parallel. Check the work as in
 `angel:implement` step 3. Then re-run step 1, at most two rounds before escalating to the user.
 
 If fixes changed behavior, re-run `angel:verify` too. The ship-gate reads the latest verification

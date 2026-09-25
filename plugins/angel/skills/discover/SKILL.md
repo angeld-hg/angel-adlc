@@ -17,6 +17,12 @@ ask the user: keep / refresh. Keep is the default when it's less than 30 days ol
 
 Create `.adlc/` if it doesn't exist. This opts the repo into angel's hooks, so tell the user.
 
+Check `git check-ignore -q .adlc/ACTIVE`. If `.adlc/` is ignored, ask the user with AskUserQuestion
+whether to commit the ADLC artifacts (recommended: yes, so the spec, decisions and evidence travel
+with the PR) or keep them local. On "commit", `git check-ignore -v .adlc/ACTIVE` names the rule that
+matches. Have an implementer remove it (elephant-guard won't let you edit it yourself), or, if it
+comes from a global gitignore, note in state.md that the artifacts need `git add -f`.
+
 ## 2. Probe (deterministic)
 
 Run:
@@ -45,7 +51,7 @@ The scout tries the commands under strict local-only rules and writes `.adlc/ver
 
 Show the scout's 5-line summary and the profile's **Gaps** section. For each gap, ask with
 AskUserQuestion (recommended option first): close it now (it becomes a chore slice or a user
-action, like starting docker) / accept it (ACs of that kind will need a manual check or a waiver) /
+action, like starting docker) / accept it (criteria of that kind will need a manual check or a waiver) /
 ignore. Record the answers in the profile's Gaps section.
 
 If the Baseline section lists failures that already exist on the current branch, tell the user

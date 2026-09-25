@@ -20,9 +20,10 @@ feature="$(angel_feature_dir)"
 file="$feature/decisions.md"
 [ -f "$file" ] || angel_allow
 
-# Each decision is a "## D<n>: <question>" heading followed by its fields; list the pending ones.
+# Each decision is a "## <decision-name>: <question>" heading followed by its fields; list the
+# pending ones by name. (Older files numbered them "## D3: ..."; those parse the same way.)
 pending="$(awk '
-  /^## D[0-9]+/ { id = $2; sub(/:$/, "", id); next }
+  /^## / { id = $2; sub(/:$/, "", id); next }
   /^- Status:[[:space:]]*pending/ && id != "" { printf "%s%s", (n++ ? ", " : ""), id }
 ' "$file")"
 [ -n "$pending" ] || angel_allow

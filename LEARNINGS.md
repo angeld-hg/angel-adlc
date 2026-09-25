@@ -5,6 +5,159 @@ Each entry answers: what did we decide, why, and what would make us change it.
 
 ---
 
+## 2026-09-24: v0.4.0, readable output, live progress, high-signal tests, light PRs
+
+Angel's notes after using angel on the gantt-chart-manager project, plus the retro fixes from that
+project (v0.3.0 below, which arrived as an agent-opened PR and is folded into this release).
+
+### Names, not labels
+
+**Problem:** agents labelled everything: S1..S13 (slices), D1..D19 (decisions), AC3, CR7, and the
+retro's E1-E7 / F1-F8. "What is D12?" The user couldn't steer work they couldn't read, and the
+v0.3.0 PR description was itself a wall of these labels.
+
+**Change:** every concept gets a short descriptive name. Criteria like `csv-download`, work items
+like `export-button`, decisions like `csv-streaming`, findings like `missing-auth-check`. Templates
+in every agent and skill were rewritten, and decision options are named too (no "A) / B)").
+- **Enforced by goldfish-gate:** `angel_id_labels` (lib.sh) finds S/D/AC/CR/E/F + digits outside
+  backticks and code fences, and sends the goldfish back if spec.md, plan.md, a saved report or a
+  final message uses them. `E2E`, `P95` and backticked real names like `S3` don't match.
+- **decision-gate** now reads `## <decision-name>: <question>` headings (older numbered files
+  still parse).
+- **Known limit:** the elephant's own chat messages can't be checked by a hook without making the
+  user read everything twice (a Stop block re-prompts after the message is shown). The primer and
+  the start skill tell the elephant to translate any label before it reaches the user.
+
+### Digests instead of dumps
+
+**Problem:** spec and plan outputs, and what each implementer was doing, arrived as too much at once.
+
+**Change:**
+- spec.md and plan.md open with `## In plain words` (enforced by goldfish-gate). The plan has a
+  table of work items, each with a one-sentence plain description, also repeated per slice.
+- `start` defines fixed gate digests ("Spec ready", "Plan ready"), 10 lines or fewer, built from
+  those sections. The spec, plan and verify skills use them.
+- Before dispatching implementers, the elephant posts "Starting 2 pieces of work in parallel: ..."
+  with each item's plain-words line.
+
+### Live progress while implementers work
+
+**Problem:** everything landed at the end of a wave.
+
+**Change:** implementers append milestone lines to `.adlc/<slug>/progress.log` (started,
+test-failing, passing, evidence, done or blocked), in plain words. The elephant watches the file
+with the Monitor tool (`tail -n 0 -F`, re-armed every 30 minutes) and relays each batch as one short
+line per work item. `blocked` is relayed immediately. goldfish-gate checks that an implementer's
+final milestone is in the log. The report now starts `## Work item <name>: DONE|BLOCKED`.
+
+Angel chose milestone updates over timed summaries.
+
+### High-signal testing
+
+**Problem:** agents wrote many shallow tests that restated the code.
+
+**Change:** one testing standard, repeated where each goldfish needs it (planner, implementer,
+code-reviewer, verifier, and the repo profile):
+- End-to-end first: each slice gets one e2e scenario through the real entry point.
+- Few tests, each failing only when behavior breaks.
+- Coverage of changed files points at missing scenarios; it isn't a target.
+- Isolated tests only after a written failure-mode list.
+- Every verification leaves a repeatable artifact at `evidence/e2e/<timestamp>/`: `rerun.sh`
+  (proven by running it), results, traces, and `coverage.txt`.
+
+The code-reviewer flags mirror-the-code tests, duplicate tests, and uncovered changed behavior as
+Major. repo-scout records the e2e command, coverage command and screenshot method, and probe-env.sh
+detects e2e harnesses and coverage tooling. When a repo has no e2e harness, angel uses the strongest
+existing method and flags the gap; it doesn't add one unasked (Angel's choice).
+
+### Light PR descriptions with screenshots
+
+**Problem:** PR bodies were too heavy.
+
+**Change:** the ship template is now:
+- Why (1-2 sentences)
+- What changed (3-5 simple bullets)
+- Evidence (2-3 lines plus the rerun command)
+- Screenshots
+- How to test (the detailed part: setup, run, try, expected result, automated)
+
+Acceptance criteria, decisions made and how it was reviewed are gone from the PR; they stay in
+`.adlc/<slug>/`.
+- **Screenshots:** the verifier captures one per visible criterion, plus a "before" when cheap,
+  into `evidence/screenshots/`.
+- **Linking them:** ship commits them and links them by commit SHA
+  (`github.com/<owner>/<repo>/blob/<sha>/...png?raw=true`), which renders for anyone who can see
+  the repo. Otherwise it lists the paths for drag-and-drop.
+- **Hook change:** reviewer-write-guard now lets the verifier write any depth under `evidence/`, so
+  it can save artifacts and screenshots. `reviews/` stays flat.
+
+### Live test (`claude -p --plugin-dir`, a tiny bash CLI repo, real planner and implementers)
+
+- **Plan:** it opened with a plain-words paragraph ("We change the one greeting script in two small
+  steps..."). Work items were named after the spec's criteria (`shout-flag`, `missing-name-error`),
+  and each had an "In plain words" line and an e2e scenario with no isolated tests. No labels
+  anywhere. ✅
+- **progress.log:** 10 milestone lines, 5 per work item, every one readable on its own, e.g.
+  "fails because it prints 'Hello, !' and exits 0 instead of showing usage and exiting 2". ✅
+- **Tests:** both implementers extended the existing e2e script with one scenario per behavior
+  (4 checks in total) instead of adding a test file each. That's the target shape. ✅
+- **Not covered by this run:** the Monitor relay (it's elephant-side and needs an interactive
+  session), screenshots, and the new PR format. Those get their first real test on the next project.
+
+### Reviewing the agent-opened PR (v0.3.0)
+
+All seven edits held up on review and are kept. Tests passed on the branch. The branch
+`iterate/v0.4-readable` is built on top of it, so merging this branch also lands v0.3.0. Its entry
+below is rewritten with names instead of E/F/S/CR labels; the content is unchanged.
+
+---
+
+## 2026-09-24: v0.3.0, fixes from the gantt-chart-manager retro
+
+First real feature through angel (hg-gaant-chart PR #1: 13 slices, 19 decisions, 3 verification
+runs). The retro (`.adlc/gantt-chart-manager/retro.md` in that repo) found 10 friction points. The
+user approved seven plugin edits. The verification-profile edit was local to that repo, and the
+guardrail false positives belong to another plugin.
+
+- **`planner-small-slices`** (fixes: slices stalling, parallel e2e collisions)
+  - At most one new e2e scenario per slice, and quality-gate work is split per scenario.
+  - If two parallel slices both run e2e, the scaffold slice makes the ports, DB path and output
+    dir configurable through env vars.
+  - Why: one slice had bundled three e2e specs and stalled twice, and parallel UI slices would have
+    collided on ports.
+- **`implementer-timebox-and-siblings`** (fixes: stalls, repeated review findings)
+  - Every command is time-boxed, since the watchdog kills a goldfish that's silent for 10 minutes.
+  - A review fix lists every sibling call site with the same flaw.
+  - Why: one finding turned out to be a sibling of an earlier one, and missing it cost a whole
+    extra review/verify round.
+- **`implement-env-facts-and-stalls`** (fixes: stalls, port collisions, flaky timing tests)
+  - The elephant may pass per-slice environment facts (ports, DB path, which slices run
+    alongside), never summaries.
+  - At most two e2e-running slices at once, because load averages of 26-45 made timing tests flaky.
+  - A stalled slice is resumed once, then split.
+- **`no-duplicate-goldfish`** (fix: a planner restarted while still working)
+  - Check ListAgents before re-dispatching. Plans take 15-20 minutes.
+- **`reviewers-save-own-reports`** (fix: the elephant retyping about 8 reports of several thousand
+  tokens each)
+  - code-reviewer, drift-checker, spec-reviewer and verifier have Write. The skills pass them a
+    report path, and they return `Report: <path>`, 5 summary lines or fewer, `## Decisions needed`
+    and the verdict.
+  - **Enforcement:** the `reviewer-write-guard` PreToolUse hook, keyed on `agent_type`. It allows
+    only `.adlc/<slug>/reviews/<name>.md` in an existing feature folder, plus `evidence/` for the
+    verifier. It denies everything else in every repo and refuses `..` segments outright.
+  - **goldfish-gate** checks that a `Report:` file exists, and for the verifier checks `## Evidence`
+    and `VERDICT:` in that file, since the ship-gate reads it.
+  - **Limitation:** writes through Bash are invisible to the hook, as with elephant-guard.
+- **`discover-adlc-tracked`** (fix: `.adlc` was gitignored and the spec trail nearly didn't ship)
+  - Discover checks `git check-ignore` and asks.
+- **`ship-gh-login-check`** (fix: the HG guardrails plugin blocks `gh auth status`)
+  - Use `gh api user --jq .login` instead.
+
+Not done: the code-reviewer asking for the sibling list, and a "run verify alone" rule (left to
+each repo's verification profile).
+
+---
+
 ## 2026-09-23: v0.2.0, decisions, verification and anti-patterns
 
 Angel asked for four changes after reviewing v0.1.0.

@@ -34,12 +34,15 @@ Requires `bash`, `jq`, `just`, and `gh` (for check-pr/ship).
     - utilities: `check-pr`, `doc-audit`, `make-claude-md`, `retro`
   - `agents/*.md`: goldfish definitions.
     - writers: `spec-writer`, `planner`, `implementer`, `repo-scout`
-    - read-only (no Write/Edit): `spec-reviewer`, `drift-checker`, `code-reviewer`, `doc-auditor`,
-      `verifier`
+    - report writers (Write, no Edit; may write only their own report under
+      `.adlc/<slug>/reviews/`, plus `evidence/` for the verifier, enforced by
+      `reviewer-write-guard`): `spec-reviewer`, `drift-checker`, `code-reviewer`, `verifier`
+    - read-only (no Write/Edit): `doc-auditor`
   - `hooks/hooks.json` plus `hooks/*.sh`. All of them source `hooks/lib.sh`; the rule hooks also
     source `hooks/rules-lib.sh`.
     - SessionStart: `session-start` (elephant memory)
-    - PreToolUse: `elephant-guard` and `antipattern-guard` (on Edit/Write), `ship-gate` (on Bash)
+    - PreToolUse: `elephant-guard`, `reviewer-write-guard` and `antipattern-guard` (on Edit/Write),
+      `ship-gate` (on Bash)
     - SubagentStop: `goldfish-gate`
     - Stop: `decision-gate`, `retro-nudge`
   - `scripts/`:
@@ -54,9 +57,13 @@ Requires `bash`, `jq`, `just`, and `gh` (for check-pr/ship).
 - **Hooks fail open.** A missing `jq` or bad input means exit 0, never a broken session. Every output
   goes through the `angel_*` emitters in `hooks/lib.sh`.
 - **Hooks are silent outside opted-in repos.** A target repo opts in by having a `.adlc/` directory.
-  One exception: the goldfish-gate's report checks (a `## Decisions needed` section and a `VERDICT:`
-  line) apply to angel's reviewer agents everywhere. They only ever affect those agents, and
-  `/angel:check-pr` and `/angel:doc-audit` gate on them even in repos without `.adlc/`.
+  Two exceptions, both limited to angel's reviewer agents: the goldfish-gate's report checks (a
+  `## Decisions needed` section and a `VERDICT:` line), because `/angel:check-pr` and
+  `/angel:doc-audit` gate on them even in repos without `.adlc/`; and `reviewer-write-guard`, because
+  those agents never change the work they judge, anywhere.
+- **Reviewers save their own reports.** The elephant passes a report path under
+  `.adlc/<slug>/reviews/`; the goldfish writes the full report there and returns a `Report: <path>`
+  line, a summary of 5 lines or fewer, its `## Decisions needed` and the `VERDICT:` line.
 - **Every hook behavior has a fixture test.** Add the test first (`tests/hooks/test_<hook>.sh`, built
   on `new_project` and `with_feature` from `tests/helpers.sh`), watch it fail, then change the hook.
   `run_hook` runs hooks from the project root, like Claude Code does. Keep it that way, because
@@ -68,11 +75,26 @@ Requires `bash`, `jq`, `just`, and `gh` (for check-pr/ship).
 - Goldfish are always handed **paths and a mode, never summaries**.
 - **Lasting choices go to the user.** Every goldfish report that can surface a choice has a
   `## Decisions needed` section. The elephant runs `decide` on it and never picks for the user.
+- **Names, not labels.** Every criterion, work item, decision, option and finding in a template has
+  a short descriptive name (`csv-download`, `export-button`, `csv-streaming`). Never write S1, D12,
+  AC3, CR7 or E/F-numbered items, in plugin files, templates, LEARNINGS or PR descriptions.
+  goldfish-gate rejects them in goldfish output (`angel_id_labels` in `hooks/lib.sh`).
+- **Digest, don't dump.** Anything the user reads opens with plain words: spec.md and plan.md start
+  with `## In plain words`, gates use the fixed digests in `skills/start`, and implementers log
+  plain-language milestones to `progress.log`, which the elephant streams as live updates.
+- **The testing standard is e2e first**, with few high-signal tests, coverage as a guide rather
+  than a target, a failure-mode list before any isolated test, and a repeatable artifact from every
+  verification. It's written into planner, implementer, code-reviewer, verifier and the repo-scout's
+  profile template. Change it in all of them together.
+- **PR descriptions stay light:** why, what changed, brief evidence, screenshots, detailed how to
+  test (`skills/ship`). This repo's own PRs follow the same format.
 - Agents reference each other as `angel:<agent>`. Hooks strip the `angel:` prefix from `agent_type`.
 - Artifacts in target repos:
   - `.adlc/ACTIVE` holds the current slug.
   - Per feature, in `.adlc/<slug>/`: `state.md`, `spec.md`, `plan.md`, `decisions.md`,
-    `reviews/` (including `verification.md`), `evidence/`, `pr-body.md`, `retro.md`.
+    `progress.log` (implementer milestones), `reviews/` (including `verification.md`),
+    `evidence/` (`e2e/<timestamp>/` repeatable artifacts, `screenshots/` for the PR),
+    `pr-body.md`, `retro.md`.
   - Repo-wide, directly in `.adlc/`: `verification.md` (profile), `probe.md`, `rules/*.md`
     (anti-patterns), `allow` (guard globs), `doc-audit-<date>.md`.
 

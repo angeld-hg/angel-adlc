@@ -1,6 +1,6 @@
 {
   "name": "angel",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Angel's personal ADLC: one orchestrating 'elephant' chat that delegates spec, plan, implement, review and ship to fresh-context 'goldfish' subagents, with hooks that enforce the split.",
   "author": {
     "name": "Angel Difo",

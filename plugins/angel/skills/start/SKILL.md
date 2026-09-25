@@ -19,8 +19,9 @@ Input: `$ARGUMENTS`
    test commands) to verify goldfish work.
 2. **Hand goldfish paths and a mode, never summaries.** "Read `.adlc/x/spec.md`", not "the spec says...".
    A summary is exactly where signal gets lost.
-3. **Gate every phase with the user.** After each phase, show the verdict and the key points in 5 lines
-   or fewer, then ask with AskUserQuestion: proceed / revise / stop. Never chain phases silently.
+3. **Gate every phase with the user.** After each phase, post the digest for that gate (see "How to
+   talk to the user"), then ask with AskUserQuestion: proceed / revise / stop. Never chain phases
+   silently, and never make the user read a report to understand where things stand.
 4. **The user makes the lasting choices.** Whenever any goldfish report has entries under
    `## Decisions needed` (anything other than "None."), follow `angel:decide` before moving on:
    harvest them into decisions.md, ask with choice boxes, record them, and route the consequences.
@@ -28,9 +29,12 @@ Input: `$ARGUMENTS`
    opinion; put your opinion in as the recommended option. The `decision-gate` hook won't let your
    turn end with decisions pending.
 5. **Evidence over assurances.** A slice isn't done because an implementer says so, and a feature
-   isn't done because tests are green. It's done when the verifier has shown each AC working.
+   isn't done because tests are green. It's done when the verifier has shown each criterion working.
 6. **Write state after every phase** (see below). If the session dies, the next one resumes from state.md.
 7. **Parallelise when it's safe.** Independent goldfish go in one message with multiple Agent calls.
+8. **Never run two goldfish on the same artifact.** If a goldfish seems slow, check ListAgents or
+   wait for its notification before re-dispatching. Large plans can take 15-20 minutes. If you do
+   restart one, stop the old one first with TaskStop.
 
 ## Step 1: Resolve the feature
 
@@ -56,7 +60,7 @@ Run each phase by following its skill. Each skill says which goldfish to dispatc
 | spec | `angel:spec` | spec-writer, then spec-reviewer | `VERDICT: READY` + decisions settled + user OK |
 | plan | `angel:plan` | planner, then drift-checker (plan) | `VERDICT: PROCEED` + decisions settled + user OK |
 | implement | `angel:implement` | implementer x N | all slices DONE, each with its evidence recipe run |
-| verify | `angel:verify` | verifier | `VERDICT: VERIFIED`, or the user waives unverified ACs |
+| verify | `angel:verify` | verifier | `VERDICT: VERIFIED`, or the user waives unverified criteria |
 | review | `angel:review` | code-reviewer + drift-checker (diff), in parallel | APPROVE + PROCEED + decisions settled |
 | ship | `angel:check-pr` (pre-push), then `angel:ship` | code-reviewer + drift-checker via check-pr | GO, then user confirms PR creation |
 
@@ -94,10 +98,43 @@ Idea: <the user's words, verbatim>
 ```
 
 After every phase or gate, update `phase`, `updated` and `next`, and append one dated line to the
-decision log: what was decided and by whom ("user approved spec with AC4 dropped"). The SessionStart
+decision log: what was decided and by whom ("user approved spec with `empty-report-message` dropped"). The SessionStart
 hook reads these fields to brief the next session.
 
-## Reporting to the user
+## How to talk to the user
 
-Keep gate messages short: phase, verdict, top 3 points, and where the full report is saved. The user
-can open the files for detail. Your context is precious, so don't paste full reports back into the chat.
+The user steers this work, and too much at once makes that impossible. Every message you send them
+follows these rules:
+- **Digest, don't dump.** 10 lines or fewer. Lead with what it means for them, then the pieces by
+  name with one plain sentence each, then exactly what you need from them. Link the file for detail;
+  never paste reports.
+- **Names, not labels.** Criteria, work items, decisions and findings have names (`csv-download`,
+  `export-button`, `csv-streaming`). Never write S1, D12, AC3 or CR7. If a goldfish gave you a
+  label, translate it before it reaches the user.
+- **Plain words.** No jargon the user didn't use first. Say "the end-to-end test", not "the e2e spec
+  in the playwright project".
+- **One thing at a time.** One gate or one question per message. Batch progress updates.
+
+Gate digests (fill from the "In plain words" sections the goldfish wrote):
+
+```
+Spec ready: <feature name>
+You'll be able to: <one sentence>
+Not included: <one sentence>
+Checks we'll prove: csv-download, export-permissions, empty-report-message
+Needs you: <the question, or "nothing - approve to plan it">
+Details: .adlc/<slug>/spec.md
+```
+
+```
+Plan ready: <feature name> - 3 pieces of work
+- export-button: adds an Export button that downloads the report
+- csv-streaming: large reports download without freezing (runs alongside export-button)
+- export-permissions: only editors see the button
+Proven by: one end-to-end test per piece, plus screenshots
+Watch out for: <top risk, one line>
+Needs you: <the question, or "nothing - approve to build it">
+Details: .adlc/<slug>/plan.md
+```
+
+During implementation, follow `angel:implement` for the "starting now" message and milestone updates.

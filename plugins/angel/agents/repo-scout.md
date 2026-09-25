@@ -35,11 +35,19 @@ verifier) will trust your profile, so only write what you observed, never what y
 3. **Try the commands** (under the safety rules). For each one, record whether it works, how long it
    took, and the pass/fail counts. Do this for install check, test, single test, lint, typecheck,
    build, and run. A command that exists but fails is a finding, not a footnote.
-4. Work out the **evidence recipes**: for each kind of change (pure logic, API endpoint, UI, CLI,
+4. **Find the e2e harness, the coverage command and a screenshot method.** The user's standard is
+   end-to-end tests first, coverage as a guide to missing scenarios, and screenshots on PRs.
+   - E2E: Playwright, Cypress, a supertest/httpx API suite, a scripted CLI runner... Try one scenario.
+   - Coverage: the command that reports coverage for specific changed files (vitest/jest
+     `--coverage`, c8, pytest-cov, `go test -cover`, and so on). Try it on one file.
+   - Screenshots: how a goldfish can capture visible changes here (Playwright `page.screenshot`,
+     the browser tools the orchestrator listed, or a terminal capture for CLIs).
+   If any of these doesn't exist, record it as a gap. Don't install or add one.
+5. Work out the **evidence recipes**: for each kind of change (pure logic, API endpoint, UI, CLI,
    data/DB, background job), what's the strongest proof available *here*, as exact commands? For
    example: "start with `just dev`, wait for `:3000`, `curl -s localhost:3000/health`, expect `ok`".
-   Actually try at least the top two.
-5. List **gaps**: kinds of change that can't be proven with what exists (no e2e harness, docker not
+   End-to-end recipes come first. Actually try at least the top two.
+6. List **gaps**: kinds of change that can't be proven with what exists (no e2e harness, docker not
    running, CLI not authenticated). For each gap, suggest the cheapest way to close it.
 
 ## Write `.adlc/verification.md`
@@ -66,15 +74,26 @@ Generated <YYYY-MM-DD> by angel:repo-scout. Refresh with /angel:discover when to
 |---|---|---|
 | Test (all) | `just test` | works: 212 passed in 14s |
 | Test (one) | `just test -- -k name` | works |
+| E2E | `just e2e` | works: 14 scenarios in 48s, results in `test-results/` |
+| Coverage (changed files) | `npx vitest run --coverage --coverage.include=<files>` | works |
 | Lint | `just lint` | FAILS on main: 3 pre-existing errors in src/x.ts |
+
+## Testing standard (applies to every goldfish in this repo)
+- End-to-end first: prove behavior through the real entry point with `<e2e command>`.
+- Few, high-signal tests: each fails only when behavior breaks. No tests that mirror the code.
+- Coverage (`<coverage command>`) points at missing scenarios; it is not a target.
+- Isolated tests only with a written failure-mode list first.
+- Every e2e run leaves an artifact: rerun script, results, screenshots, coverage.
+- Screenshots: `<how to capture them here>`
 
 ## Evidence recipes
 Strongest proof first. Planner and verifier pick from this list.
-1. **Unit/logic:** `<command>`. <what a pass looks like>
+1. **E2E:** `<command>`, artifacts in `<dir>`. <what a pass looks like>
 2. **API/HTTP:** start `<cmd>`, wait for `<port>`, `curl ...`, expect `<...>`
-3. **UI:** <browser automation tool / playwright command, or "manual only">
+3. **UI:** <playwright command / browser tools, or "manual only">
 4. **CLI:** `<invocation>` with expected output
-5. **Data/DB:** <how to inspect state locally>
+5. **Isolated logic:** `<command>`. <what a pass looks like>
+6. **Data/DB:** <how to inspect state locally>
 
 ## Gaps
 - <what can't be proven today> -> <cheapest fix>

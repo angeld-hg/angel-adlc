@@ -32,8 +32,10 @@ Repeat until no decisions remain pending (at most two rounds, then ask the user 
 
 ## 3. Review
 
-Dispatch `angel:spec-reviewer` with the path to `spec.md`. Save its report to
-`.adlc/<slug>/reviews/spec-review.md`.
+Dispatch `angel:spec-reviewer` with the path to `spec.md` and the report path
+`.adlc/<slug>/reviews/spec-review.md` (on a re-review, `spec-review-2.md`, and so on). It saves its
+own report there and returns only a `Report:` line, a short summary, its Decisions needed and the
+verdict. Don't copy the report yourself; confirm the file exists.
 
 - Decisions needed in the review: follow `angel:decide` first.
 - `VERDICT: REVISE`: dispatch spec-writer once with the review path (and decisions.md), then re-review.
@@ -41,7 +43,8 @@ Dispatch `angel:spec-reviewer` with the path to `spec.md`. Save its report to
 
 ## 4. Gate
 
-Tell the user in 5 lines or fewer: the goal, AC count, non-goals, and anything the reviewer flagged
-as "should fix". Ask: approve / revise / stop.
+Post the **Spec ready** digest from `angel:start` ("How to talk to the user"), filled from the spec's
+"In plain words" section and its criterion names. 10 lines or fewer, names not labels. Mention a
+reviewer "should fix" item only if the user would care. Ask: approve / revise / stop.
 
 On approval, update state.md: `phase: plan`, `next: run /angel:plan`, plus a decision-log line.
