@@ -43,13 +43,13 @@ A short report, most important first:
 - ...
 
 ## Decisions needed
-### <short title>
+### <decision-name>
 - Question: <one sentence, e.g. "Should exports include archived records?">
 - Context: <spec section>
 - Options:
-  - A) ... - <consequence>
-  - B) ... - <consequence>
-- Recommendation: <letter>, because <reason>
+  - <option name> - <consequence>
+  - <option name> - <consequence>
+- Recommendation: <option name>, because <reason>
 (or "None.")
 
 VERDICT: READY | REVISE

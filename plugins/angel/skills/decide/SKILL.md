@@ -22,17 +22,19 @@ and `plan.md`) and copy every entry under a `## Decisions needed` heading into
 ```markdown
 # Decisions: <slug>
 
-## D<n>: <question>
+## <decision-name>: <question>
 - Status: pending
 - Raised by: <agent> (<report path>)
 - Context: <from the report>
 - Options:
-  - A) <option> - <consequence>
-  - B) <option> - <consequence>
-- Recommendation: <letter>, because <reason>
+  - <option name> - <consequence>
+  - <option name> - <consequence>
+- Recommendation: <option name>, because <reason>
 ```
 
-Number decisions sequentially across the feature (D1, D2, ...), and never reuse a number. The
+Give each decision a short kebab-case **name** that says what it's about (`csv-streaming`,
+`export-feature-flag`), unique within the feature. Never number them (D1, D2...): the user has to
+know what a decision is from its name alone, especially when they come back to it later. The
 `decision-gate` hook refuses to let your turn end while any entry says `Status: pending`.
 
 **Is it really a decision?** If exactly one option is defensible, it's a fix: send it to an
@@ -67,23 +69,23 @@ Update each entry:
 
 ```markdown
 - Status: decided
-- Decision: <letter + label>, by user, <YYYY-MM-DD>. <their note, if any>
+- Decision: <option name>, by user, <YYYY-MM-DD>. <their note, if any>
 ```
 
 If the user explicitly postpones one, use `Status: deferred` with their reason. Append one line
-per decision to state.md's decision log ("D3 decided: stream CSV (user)").
+per decision to state.md's decision log ("csv-streaming decided: stream it (user)").
 
 ## 5. Route the consequences
 
 Each decision goes back to whoever owns the affected artifact. Pass the decisions.md path and the
-ids, never a paraphrase:
+names, never a paraphrase:
 
 | Decision changes | Send to |
 |---|---|
-| requirements, scope, ACs | `angel:spec-writer` (second pass) |
+| requirements, scope, criteria | `angel:spec-writer` (second pass) |
 | design, slices, contracts | `angel:planner` (revision pass) |
 | code already written | `angel:implementer` (one per affected slice) |
 | "ban this pattern" (rule candidates) | follow `angel:antipattern` |
-| waive verification for some ACs | record it, then set `verification: waived` in state.md only if the user waived **every** unverified AC |
+| waive verification for some criteria | record it, then set `verification: waived` in state.md only if the user waived **every** unverified criterion |
 
 Then re-run the review that raised the decision, so it can confirm the new state.

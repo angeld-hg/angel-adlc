@@ -75,11 +75,26 @@ Requires `bash`, `jq`, `just`, and `gh` (for check-pr/ship).
 - Goldfish are always handed **paths and a mode, never summaries**.
 - **Lasting choices go to the user.** Every goldfish report that can surface a choice has a
   `## Decisions needed` section. The elephant runs `decide` on it and never picks for the user.
+- **Names, not labels.** Every criterion, work item, decision, option and finding in a template has
+  a short descriptive name (`csv-download`, `export-button`, `csv-streaming`). Never write S1, D12,
+  AC3, CR7 or E/F-numbered items, in plugin files, templates, LEARNINGS or PR descriptions.
+  goldfish-gate rejects them in goldfish output (`angel_id_labels` in `hooks/lib.sh`).
+- **Digest, don't dump.** Anything the user reads opens with plain words: spec.md and plan.md start
+  with `## In plain words`, gates use the fixed digests in `skills/start`, and implementers log
+  plain-language milestones to `progress.log`, which the elephant streams as live updates.
+- **The testing standard is e2e first**, with few high-signal tests, coverage as a guide rather
+  than a target, a failure-mode list before any isolated test, and a repeatable artifact from every
+  verification. It's written into planner, implementer, code-reviewer, verifier and the repo-scout's
+  profile template. Change it in all of them together.
+- **PR descriptions stay light:** why, what changed, brief evidence, screenshots, detailed how to
+  test (`skills/ship`). This repo's own PRs follow the same format.
 - Agents reference each other as `angel:<agent>`. Hooks strip the `angel:` prefix from `agent_type`.
 - Artifacts in target repos:
   - `.adlc/ACTIVE` holds the current slug.
   - Per feature, in `.adlc/<slug>/`: `state.md`, `spec.md`, `plan.md`, `decisions.md`,
-    `reviews/` (including `verification.md`), `evidence/`, `pr-body.md`, `retro.md`.
+    `progress.log` (implementer milestones), `reviews/` (including `verification.md`),
+    `evidence/` (`e2e/<timestamp>/` repeatable artifacts, `screenshots/` for the PR),
+    `pr-body.md`, `retro.md`.
   - Repo-wide, directly in `.adlc/`: `verification.md` (profile), `probe.md`, `rules/*.md`
     (anti-patterns), `allow` (guard globs), `doc-audit-<date>.md`.
 

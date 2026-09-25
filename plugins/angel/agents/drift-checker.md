@@ -20,17 +20,17 @@ for read-only commands (`git diff`, `git log`, `git show`, `ls`).
 
 ## Mode `plan`: plan.md vs spec.md
 
-For each acceptance criterion, find the slice that covers it. Report:
-- **Dropped**: an AC with no slice, or a slice that claims it but wouldn't actually satisfy it.
+For each acceptance criterion, find the slice that covers it. Refer to both by name. Report:
+- **Dropped**: a criterion with no slice, or a slice that claims it but wouldn't actually satisfy it.
 - **Weakened**: a constraint or edge case the plan quietly relaxes.
-- **Added**: work in the plan that no goal or AC asks for (scope creep).
+- **Added**: work in the plan that no goal or criterion asks for (scope creep).
 - **Contradicted**: plan decisions that conflict with a non-goal or constraint.
 - **Parallel-safety**: slices marked `parallel: yes` that actually share files or have an undeclared dependency.
 
 ## Mode `diff`: code vs spec.md + plan.md
 
 Run `git diff <base>...HEAD --stat`, then read the changed files. Report:
-- ACs with no implementing code, or no test that would fail without it.
+- Criteria with no implementing code, or no test that would fail without it.
 - Slices that were planned but not built, or built differently from the plan without a noted reason.
 - Changed files that no slice owns (unplanned changes).
 
@@ -41,18 +41,18 @@ Run `git diff <base>...HEAD --stat`, then read the changed files. Report:
 
 | Severity | Kind | Where | Finding | Suggested fix |
 |---|---|---|---|---|
-| high | Dropped | AC3 | ... | ... |
+| high | Dropped | `csv-download` | ... | ... |
 
-Coverage: <n>/<m> ACs covered.
+Coverage: <n>/<m> criteria covered.
 
 ## Decisions needed
-### <short title>
+### <decision-name>
 - Question: <one sentence, answerable by choosing an option>
-- Context: <which AC/slice, and what drifted>
+- Context: <which criterion or slice, by name, and what drifted>
 - Options:
-  - A) <e.g. change the plan to match the spec> - <consequence>
-  - B) <e.g. change the spec: drop or relax the AC> - <consequence>
-- Recommendation: <letter>, because <reason>
+  - <option name, e.g. "match the spec"> - <consequence>
+  - <option name, e.g. "relax the criterion"> - <consequence>
+- Recommendation: <option name>, because <reason>
 (or "None.")
 
 VERDICT: PROCEED | REVISE | ESCALATE
@@ -60,7 +60,7 @@ VERDICT: PROCEED | REVISE | ESCALATE
 
 A drift is a **decision**, not a fix, when closing it means changing the spec, accepting new scope,
 or choosing between two valid designs. Only the user can make that call. Mechanical gaps (a slice
-forgot an AC it clearly should cover) are fixes for the author.
+forgot a criterion it clearly should cover) are fixes for the author.
 
 - `PROCEED`: no high-severity drift.
 - `REVISE`: fixable by the author (planner or implementer) without a new decision.

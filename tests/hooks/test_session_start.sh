@@ -11,6 +11,8 @@ mkdir -p "$p/.adlc"
 out="$(run_hook session-start.sh "$payload")"
 assert_json "opted-in repo: injects the elephant primer" "$out" "$ctx | contains(\"You are the **elephant**\")"
 assert_json "no active feature: suggests /angel:start" "$out" "$ctx | contains(\"No active feature\")"
+assert_json "primer tells the elephant to use names, not labels" "$out" "$ctx | contains(\"Names, not labels\")"
+assert_json "primer tells the elephant to digest, not dump" "$out" "$ctx | contains(\"Digest, don't dump\")"
 
 with_feature "$p" add-export plan
 printf '# Spec\n' >"$p/.adlc/add-export/spec.md"

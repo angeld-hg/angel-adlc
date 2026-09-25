@@ -52,9 +52,9 @@ Output:
 | Lint | ... |
 | Code review | APPROVE / CHANGES_REQUESTED (<n> critical) |
 | Drift | PROCEED / REVISE / n/a |
-| Verification | VERIFIED (n/m ACs) / waived / STALE / MISSING / n/a |
+| Verification | VERIFIED (n/m criteria) / waived / STALE / MISSING / n/a |
 | Anti-patterns | clean / <n> new violations / no rules |
-| Open decisions | none / D2, D5 pending |
+| Open decisions | none / `export-feature-flag`, `excel-support` pending |
 | Hygiene | ok / <issues> |
 
 GO | NO-GO: <the one thing to fix first>

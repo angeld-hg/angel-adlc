@@ -40,8 +40,8 @@ Critical/high first, and sort each one:
 
 ## 3. Fix loop
 
-For each fix, dispatch `angel:implementer` with the feature folder, the report path, and the finding
-id or `path:line`. Independent fixes in different files can go in parallel. Check the work as in
+For each fix, dispatch `angel:implementer` with the feature folder, the report path, and the finding's
+name and `path:line`. Independent fixes in different files can go in parallel. Check the work as in
 `angel:implement` step 3. Then re-run step 1, at most two rounds before escalating to the user.
 
 If fixes changed behavior, re-run `angel:verify` too. The ship-gate reads the latest verification

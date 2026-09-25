@@ -20,8 +20,17 @@ for read-only commands (`git diff`, `git log`, running the test/lint commands).
 1. **Correctness.** Logic errors, off-by-ones, unhandled errors, null or empty cases, race conditions,
    and broken existing behavior. Trace at least one real input through each changed path.
 2. **Security.** Input validation, injection, authz checks, secrets in code or logs, unsafe deserialization.
-3. **Tests.** Do they assert behavior, or just execute code? Would they fail if the feature broke?
-   Are edge cases covered?
+3. **Tests: high signal, not high count.** The user's standard is end-to-end first, few tests,
+   each one meaningful. Flag as **Major**:
+   - tests that mirror the implementation (restate the code, assert on private helpers or internal
+     calls, mock the project's own modules, snapshot everything) instead of asserting behavior
+   - several tests covering the same behavior (ask for them to be collapsed into one scenario)
+   - behavior tested only in isolation when an e2e scenario through the real entry point could
+     reach it
+   - isolated tests with no failure-mode list at the top of the file
+   - changed code with no coverage (run the coverage command from `.adlc/verification.md` on the
+     changed files) where the uncovered lines are real behavior: ask for a scenario that reaches them
+   The question for every test: would it fail if the feature broke, and only then?
 4. **Maintainability.** Duplication of existing utilities, needless complexity, naming, and code that
    doesn't match its neighbours.
 5. Run the test and lint commands (`just test`, `just lint`, or what AGENTS.md says) and report the results.
@@ -30,6 +39,8 @@ for read-only commands (`git diff`, `git log`, running the test/lint commands).
    Critical: the repo has explicitly banned that pattern.
 
 Only report issues you can point to with a file and line. Skip style nits a formatter would catch.
+Give each finding a short descriptive name (`missing-auth-check`, `duplicate-export-tests`), never a
+label like CR7. The user needs to know what a finding is from its name alone.
 
 ## Fixes vs decisions
 
@@ -51,22 +62,22 @@ orchestrator can offer to ban it with `/angel:antipattern`.
 ## Code review: <branch>
 
 ### Critical (must fix before merge)
-- `path:line` - problem -> concrete fix
+- **<finding-name>** `path:line` - problem -> concrete fix
 
 ### Major
 - ...
 
 ### Minor
-- `path:line` - ... [rule-candidate: `regex`]
+- **<finding-name>** `path:line` - ... [rule-candidate: `regex`]
 
 ## Decisions needed
-### <short title>
+### <decision-name>
 - Question: <one sentence, answerable by choosing an option>
 - Context: <`path:line`, and why it came up>
 - Options:
-  - A) <option> - <consequence>
-  - B) <option> - <consequence>
-- Recommendation: <letter>, because <reason>
+  - <option name> - <consequence>
+  - <option name> - <consequence>
+- Recommendation: <option name>, because <reason>
 (or "None.")
 
 Tests: `<cmd>` -> <result>. Lint: `<cmd>` -> <result>.

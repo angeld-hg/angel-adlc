@@ -4,7 +4,7 @@ source "$(dirname "$0")/../helpers.sh"
 new_project; p="$CLAUDE_PROJECT_DIR"
 (cd "$p" && git init -q -b main .)
 cat >"$p/package.json" <<'EOF'
-{"name": "demo", "scripts": {"test": "vitest run", "dev": "vite --port 5173"}}
+{"name": "demo", "scripts": {"test": "vitest run", "dev": "vite --port 5173", "e2e": "playwright test"}, "devDependencies": {"@vitest/coverage-v8": "^2.0.0", "@playwright/test": "^1.50.0"}}
 EOF
 printf 'test:\n    npm test\n' >"$p/justfile"
 printf 'import { defineConfig } from "vitest/config"\n' >"$p/vitest.config.ts"
@@ -28,6 +28,8 @@ else
   pass "never prints .env contents"
 fi
 assert_contains "has a CLI table" "$out" "| CLI | Installed | Version | Repo needs it |"
+assert_contains "detects coverage tooling" "$out" "Coverage tooling: @vitest/coverage-v8"
+assert_contains "detects an e2e harness" "$out" "E2E harness: @playwright/test"
 
 rm -rf "$p"
 finish

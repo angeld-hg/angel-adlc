@@ -6,7 +6,7 @@
 # message. They judge the work; they never change it. So a write from one of them is
 # allowed only when the target is
 #   .adlc/<slug>/reviews/<name>.md      (all four; <slug> must be an existing feature folder)
-#   .adlc/<slug>/evidence/<name>        (verifier only: its throwaway scripts and fixtures)
+#   .adlc/<slug>/evidence/**            (verifier only: e2e artifacts, screenshots, throwaway scripts)
 # Everything else they try to write is denied.
 #
 # The caller is identified by `agent_type` in the payload, which Claude Code sets only
@@ -36,7 +36,7 @@ path="$(angel_field '.tool_input.file_path // .tool_input.notebook_path')"
 [ -n "$path" ] || angel_allow # nothing to write to; let the tool report its own error
 
 allowed=".adlc/<slug>/reviews/<name>.md"
-[ "$agent" = "verifier" ] && allowed="$allowed (or a throwaway script under .adlc/<slug>/evidence/)"
+[ "$agent" = "verifier" ] && allowed="$allowed (or its e2e artifacts, throwaway scripts and screenshots under .adlc/<slug>/evidence/)"
 deny() {
   angel_deny "angel reviewer-write-guard: $agent may only write its own report, to $allowed inside an existing feature folder: the report path the orchestrator gave you. It can't write $1. You don't change the work you judge: put the finding or the suggested change in your report instead."
 }
@@ -58,17 +58,20 @@ case "$path" in
   *) deny "$path" ;;
 esac
 
-# rel must be exactly <slug>/<folder>/<file>.
+# rel is <slug>/reviews/<file>.md (flat), or for the verifier <slug>/evidence/<any depth>/<file>
+# (its e2e artifact: rerun script, results, screenshots for the PR).
 IFS=/ read -r -a parts <<<"$rel"
-[ "${#parts[@]}" -eq 3 ] || deny ".adlc/$rel"
-slug="${parts[0]}" folder="${parts[1]}" file="${parts[2]}"
+[ "${#parts[@]}" -ge 3 ] || deny ".adlc/$rel"
+slug="${parts[0]}" folder="${parts[1]}" file="${parts[${#parts[@]}-1]}"
 [ -n "$slug" ] && [ -n "$file" ] && [ -d "$project/.adlc/$slug" ] || deny ".adlc/$rel"
 
 case "$folder" in
   reviews)
-    case "$file" in
-      *.md) angel_allow ;;
-    esac
+    if [ "${#parts[@]}" -eq 3 ]; then
+      case "$file" in
+        *.md) angel_allow ;;
+      esac
+    fi
     ;;
   evidence)
     [ "$agent" = "verifier" ] && angel_allow

@@ -50,6 +50,14 @@ assert_empty "verifier may write throwaway scripts under .adlc/<slug>/evidence/"
   "$(guard "$p/.adlc/add-export/evidence/check.sh" angel:verifier)"
 assert_json "code-reviewer may not write under evidence/" \
   "$(guard "$p/.adlc/add-export/evidence/check.sh" angel:code-reviewer)" "$deny"
+assert_empty "verifier may write the e2e artifact in subfolders (rerun script, results)" \
+  "$(guard "$p/.adlc/add-export/evidence/e2e/2026-09-24/rerun.sh" angel:verifier)"
+assert_empty "verifier may save screenshots for the PR under evidence/screenshots/" \
+  "$(guard "$p/.adlc/add-export/evidence/screenshots/export-button.png" angel:verifier)"
+assert_json "'..' still can't climb out of evidence/" \
+  "$(guard "$p/.adlc/add-export/evidence/../../../src/app.ts" angel:verifier)" "$deny"
+assert_json "reviews/ stays flat: no subfolders" \
+  "$(guard "$p/.adlc/add-export/reviews/sub/r.md" angel:code-reviewer)" "$deny"
 
 # --- everyone else is not this hook's business
 assert_empty "main session (no agent_type) is left to elephant-guard" "$(guard "$p/src/app.ts")"

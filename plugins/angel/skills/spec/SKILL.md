@@ -43,7 +43,8 @@ verdict. Don't copy the report yourself; confirm the file exists.
 
 ## 4. Gate
 
-Tell the user in 5 lines or fewer: the goal, AC count, non-goals, and anything the reviewer flagged
-as "should fix". Ask: approve / revise / stop.
+Post the **Spec ready** digest from `angel:start` ("How to talk to the user"), filled from the spec's
+"In plain words" section and its criterion names. 10 lines or fewer, names not labels. Mention a
+reviewer "should fix" item only if the user would care. Ask: approve / revise / stop.
 
 On approval, update state.md: `phase: plan`, `next: run /angel:plan`, plus a decision-log line.

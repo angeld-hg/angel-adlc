@@ -51,7 +51,7 @@ The scout tries the commands under strict local-only rules and writes `.adlc/ver
 
 Show the scout's 5-line summary and the profile's **Gaps** section. For each gap, ask with
 AskUserQuestion (recommended option first): close it now (it becomes a chore slice or a user
-action, like starting docker) / accept it (ACs of that kind will need a manual check or a waiver) /
+action, like starting docker) / accept it (criteria of that kind will need a manual check or a waiver) /
 ignore. Record the answers in the profile's Gaps section.
 
 If the Baseline section lists failures that already exist on the current branch, tell the user

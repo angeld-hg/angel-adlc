@@ -165,6 +165,22 @@ for f in jest.config.js jest.config.ts vitest.config.ts vitest.config.js pytest.
   exists "$f" && echo "- \`$f\`"
 done
 grep -q '\[tool.pytest' pyproject.toml 2>/dev/null && echo "- pytest configured in pyproject.toml"
+
+# E2E harness and coverage tooling: angel's testing standard is e2e first, with coverage as a
+# guide to missing scenarios, so the scout needs to know whether either exists.
+deps=""
+if exists package.json && have jq; then
+  deps="$(jq -r '((.dependencies // {}) + (.devDependencies // {})) | keys[]' package.json 2>/dev/null)"
+fi
+for f in pyproject.toml requirements.txt requirements-dev.txt Gemfile go.mod Cargo.toml; do
+  exists "$f" && deps="$deps
+$(cat "$f")"
+done
+e2e="$(grep -oE '@playwright/test|playwright|cypress|puppeteer|webdriverio|selenium|supertest|capybara|detox|testcontainers' <<<"$deps" | awk '!seen[$0]++' | head -n 4 | paste -sd, - | sed 's/,/, /g')"
+cov="$(grep -oE '@vitest/coverage-[a-z0-9]+|c8|nyc|istanbul|pytest-cov|coverage|simplecov|tarpaulin|cargo-llvm-cov' <<<"$deps" | awk '!seen[$0]++' | head -n 4 | paste -sd, - | sed 's/,/, /g')"
+exists go.mod && cov="${cov:+$cov, }go test -cover (built in)"
+echo "- E2E harness: ${e2e:-none detected}"
+echo "- Coverage tooling: ${cov:-none detected}"
 test_dirs="$(find . -maxdepth 3 -type d \( -name test -o -name tests -o -name __tests__ -o -name spec -o -name e2e -o -name integration \) \
   ! -path './node_modules/*' ! -path './.git/*' ! -path './.venv/*' 2>/dev/null | sed 's|^\./||' | tr '\n' ' ')"
 echo "- Test directories: ${test_dirs:-none found}"

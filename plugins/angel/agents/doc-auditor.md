@@ -44,13 +44,13 @@ any skill or agent file:
 |---|---|---|---|---|
 
 ## Decisions needed
-### <short title>
+### <decision-name>
 - Question: <e.g. "Should 'never call the DB from handlers' become an enforced rule?">
 - Context: <file:line>
 - Options:
-  - A) ... - <consequence>
-  - B) ... - <consequence>
-- Recommendation: <letter>, because <reason>
+  - <option name> - <consequence>
+  - <option name> - <consequence>
+- Recommendation: <option name>, because <reason>
 (or "None.")
 
 VERDICT: CLEAN | FIXES_SUGGESTED

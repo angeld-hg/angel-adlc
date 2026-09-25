@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Phase 6 of the angel ADLC. Pushes the feature branch and opens a GitHub PR whose description is built from spec.md, plan.md and the review reports, then marks the feature shipped. Only runs when the user invokes /angel:ship. Never merges. Do not use before /angel:verify is VERIFIED (the ship-gate hook enforces this), /angel:review has passed, and /angel:check-pr says GO.
+description: Phase 6 of the angel ADLC. Pushes the feature branch and opens a GitHub PR with a short description (why, what changed, brief evidence, screenshots of visible changes, detailed how-to-test), then marks the feature shipped. Only runs when the user invokes /angel:ship. Never merges. Do not use before /angel:verify is VERIFIED (the ship-gate hook enforces this), /angel:review has passed, and /angel:check-pr says GO.
 argument-hint: "[slug] [--draft]"
 disable-model-invocation: true
 ---
@@ -20,45 +20,70 @@ Input: `$ARGUMENTS`: a slug (or empty for `.adlc/ACTIVE`), optionally `--draft`.
 - gh is authenticated: `gh api user --jq .login` prints a login. Prefer this over `gh auth status`,
   which some guardrail hooks block.
 
-## 2. Build the PR description
+## 2. Draft the PR description (short)
 
-Read `spec.md`, `plan.md` and `reviews/*.md` and write the body to `.adlc/<slug>/pr-body.md`:
+The user wants PR descriptions light: a reviewer should get it in 30 seconds. Read `spec.md`,
+`plan.md` and `reviews/verification.md`, and write the body to `.adlc/<slug>/pr-body.md`:
 
 ```markdown
 ## Why
-<Problem from the spec, 2-3 sentences.>
+<1-2 sentences: the problem, in plain words.>
 
 ## What changed
-<One bullet per slice: what it delivers, not a file list.>
-
-## Acceptance criteria
-- [x] AC1 ... (covered by `test name`)
+- <one simple bullet per user-visible change, 3-5 at most; no file lists, no tables>
 
 ## Evidence it works
-<One line per AC: how it was verified (e2e / integration / unit / manual) and the key command,
-from reviews/verification.md. List waived ACs and the decision id.>
+<2-3 lines: what was run and the result, e.g. "4 end-to-end scenarios pass (`just e2e`).
+Re-run: `bash .adlc/<slug>/evidence/e2e/<timestamp>/rerun.sh`">
 
-## Decisions made
-<One line per decided entry in decisions.md: the question, then the choice.>
-
-## How it was reviewed
-- Code review: APPROVE (<n> findings fixed, <n> waived: reason)
-- Drift check: PROCEED, <n>/<m> ACs covered
+## Screenshots
+<one image per visible change, captioned by what it shows; before/after side by side when there's
+a "before". For CLI changes, a short fenced block of real output instead. Omit this section only if
+nothing is visible.>
 
 ## How to test
-<Commands, or manual steps.>
+1. **Set up:** <branch checkout, install, env vars, seed data: exact commands>
+2. **Run it:** <exact command to start the app or tool, and where to open it>
+3. **Try it:** <step by step: what to click, call or type>
+4. **You should see:** <the expected result for each step, including one failure case>
+5. **Automated:** <the e2e command, and how long it takes>
 ```
 
-Show the title and body to the user and ask for confirmation before pushing. This is an outward-facing action.
+Rules:
+- Leave out acceptance-criteria checklists, decisions made, how it was reviewed, and test logs.
+  Those live in `.adlc/<slug>/` for anyone who wants them.
+- Names, not labels: never S1, D12 or AC3 in a PR.
+- "How to test" is the most detailed section. Someone new to the repo should be able to follow it.
+- Title: plain words, under 60 characters, saying what the user gets ("Export reports as CSV").
 
-## 3. Open the PR
+## 3. Screenshots
+
+The verifier saved screenshots under `.adlc/<slug>/evidence/screenshots/` (`<criterion-name>.png`,
+plus `-before.png` where there's a before). If a visible change has no screenshot, ask the verifier
+for one (or capture it with the browser tools) before shipping.
+
+GitHub can only render images that live somewhere it can reach, so they go in the branch:
+1. Make sure the screenshots are committed (`git add -f .adlc/<slug>/evidence/screenshots` if
+   `.adlc/` is gitignored in this repo).
+2. After pushing (step 4), reference each one by commit SHA so the link never breaks:
+   `![<what it shows>](https://github.com/<owner>/<repo>/blob/<sha>/.adlc/<slug>/evidence/screenshots/<file>.png?raw=true)`
+   (`<owner>/<repo>` from `gh repo view --json nameWithOwner --jq .nameWithOwner`, `<sha>` from
+   `git rev-parse HEAD`). These render for anyone who can see the repo, including private repos.
+3. If the repo isn't on GitHub, or images can't be linked, list the screenshot paths in the PR and
+   tell the user they can drag them into the description on the web.
+
+## 4. Confirm, then open the PR
+
+Show the user the title and body (screenshots listed by file name) and ask for confirmation before
+pushing. This is an outward-facing action. Then:
 
 ```bash
 git push -u origin HEAD
+# fill the screenshot links in pr-body.md with the pushed SHA, then:
 gh pr create --title "<title>" --body-file .adlc/<slug>/pr-body.md [--draft]
 ```
 
-## 4. Record
+## 5. Record
 
 Update state.md: `phase: shipped`, `next: run /angel:retro; watch the PR with /angel:check-pr`, plus a
 decision-log line with the PR URL. Give the user the PR link. **Never merge**: the user merges.

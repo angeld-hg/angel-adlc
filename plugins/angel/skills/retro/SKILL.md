@@ -35,11 +35,15 @@ The goal is to make the next feature cheaper. Every friction point should become
 ## Friction
 | What happened | Root cause | Fix type | Proposed change |
 |---|---|---|---|
-| planner marked S2/S3 parallel but they shared utils.ts | parallel-safety not checked | agent | planner: list shared helpers under Contracts |
+| planner marked `export-button` and `csv-streaming` parallel but they shared utils.ts | parallel-safety not checked | agent | planner: list shared helpers under Contracts |
 
 ## Numbers
-Revise loops: spec <n>, plan <n>, review <n>. Slices: <n> (<n> parallel). Waivers: <n>.
+Revise loops: spec <n>, plan <n>, review <n>. Work items: <n> (<n> in parallel). Waivers: <n>.
 ```
+
+Give every friction row and every proposed edit a short descriptive name (`parallel-port-collision`,
+`planner-small-slices`), never F1 or E3: the user reviews these later and has to know what each one
+is from its name.
 
 ## 3. Propose edits
 

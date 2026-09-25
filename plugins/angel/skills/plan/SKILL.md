@@ -38,7 +38,9 @@ Decisions needed and the verdict. Don't copy the report yourself; confirm the fi
 
 ## 3. Gate
 
-Tell the user: the approach in one line, the slices (id + name + parallel? + how each will be
-proven), AC coverage, the decisions made, and the top risk. Ask: approve / revise / stop.
+Post the **Plan ready** digest from `angel:start` ("How to talk to the user"): one line per work item
+from the plan's plain-words table (name + what it does + what it runs alongside), how it will be
+proven, the top risk, and what you need from the user. 10 lines or fewer, names not labels. Ask:
+approve / revise / stop.
 
 On approval, update state.md: `phase: implement`, `next: run /angel:implement`, plus a decision-log line.
